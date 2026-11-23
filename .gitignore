@@ -1,0 +1,7 @@
+# Local dataset links
+datasets/
+
+# Cloned code, checkpoints and embeddings created by leaderboard/methods/*/run.sh
+leaderboard/.cache/
+
+__pycache__/

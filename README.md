@@ -8,6 +8,7 @@ A curated list of motion-text embedding models, which learn a joint space for 3D
 
 - [Methods](#methods)
 - [Datasets](#datasets)
+- [Leaderboard](#leaderboard)
 - [Evaluation](#evaluation)
 
 ## Methods
@@ -20,6 +21,7 @@ A curated list of motion-text embedding models, which learn a joint space for 3D
 | TMR | TMR: Text-to-Motion Retrieval Using Contrastive 3D Human Motion Synthesis | ICCV 2023 | [arXiv](https://arxiv.org/abs/2305.00976) | [GitHub](https://github.com/Mathux/TMR) |
 | MoPatch | Exploring Vision Transformers for 3D Human Motion-Language Models with Motion Patches | CVPR 2024 | [arXiv](https://arxiv.org/abs/2405.04771) | [GitHub](https://github.com/line/MotionPatches) |
 | LAVIMO | Tri-Modal Motion Retrieval by Learning a Joint Embedding Space | CVPR 2024 | [arXiv](https://arxiv.org/abs/2403.00691) | Not released |
+| LaMP | LaMP: Language-Motion Pretraining for Motion Generation, Retrieval, and Captioning | ICLR 2025 | [arXiv](https://arxiv.org/abs/2410.07093) | [GitHub](https://github.com/gentlefress/LaMP) |
 | SGAR | SGAR: Structural Generative Augmentation for 3D Human Motion Retrieval | NeurIPS 2025 | [Paper](https://openreview.net/pdf/1d98cebdbc17f9dacf4861cfbd15a16f71dd3e8a.pdf) / [Project](https://jhang2020.github.io/Projects/SGAR/SGAR.html) | [GitHub](https://github.com/JHang2020/SGAR) |
 | MotionBind | MotionBind: Multi-Modal Human Motion Alignment for Retrieval, Recognition, and Generation | NeurIPS 2025 | [OpenReview](https://openreview.net/forum?id=sUjwDdyspc) / [Project](https://vidal-lab.github.io/MotionBind/) | Not released |
 
@@ -30,9 +32,43 @@ A curated list of motion-text embedding models, which learn a joint space for 3D
 | KIT-ML | The KIT Motion-Language Dataset | Big Data 2016 | [arXiv](https://arxiv.org/abs/1607.03827) |
 | HumanML3D | Generating Diverse and Natural 3D Human Motions from Text | CVPR 2022 | [Paper](https://openaccess.thecvf.com/content/CVPR2022/html/Guo_Generating_Diverse_and_Natural_3D_Human_Motions_From_Text_CVPR_2022_paper.html) / [GitHub](https://github.com/EricGuo5513/HumanML3D) |
 
+## Leaderboard
+
+All results are measured by us on the fixed HumanML3D test set with the same evaluation script (see [Evaluation](#evaluation)), so they may differ from the numbers reported in the papers. Columns 2-7 are Text-to-Motion and columns 8-13 are Motion-to-Text retrieval.
+
+### HumanML3D (All protocol)
+
+| Method | R@1 | R@2 | R@3 | R@5 | R@10 | MedR | R@1 | R@2 | R@3 | R@5 | R@10 | MedR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Guo et al. | 1.85 | 3.49 | 4.84 | 7.19 | 12.57 | 81.00 | 2.40 | 3.70 | 5.41 | 8.01 | 12.91 | 81.00 |
+
+### HumanML3D (Small-Batch protocol)
+
+| Method | R@1 | R@2 | R@3 | R@5 | R@10 | MedR | R@1 | R@2 | R@3 | R@5 | R@10 | MedR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Guo et al. | 51.16 | 71.67 | 81.07 | 89.92 | 96.49 | 1.46 | 50.68 | 71.90 | 81.73 | 90.15 | 97.06 | 1.51 |
+
+### Reproduce
+
+Each method has a script that clones the official code at a fixed commit, downloads the pretrained model, exports the embeddings of the test pairs, and computes the metrics. Prepare the Python environment of the method and HumanML3D yourself, then run:
+
+| Method | Command | Result |
+|---|---|---|
+| Guo et al. | `bash leaderboard/methods/guo/run.sh /path/to/HumanML3D` | [guo.json](leaderboard/results/guo.json) |
+
 ## Evaluation
 
 Motion-text embedding models are evaluated by cross-modal retrieval on the test split of each dataset. Each test sample is a (motion, text) pair, and a similarity matrix is computed between all text and motion embeddings in the evaluation pool.
+
+### Test set
+
+The HumanML3D test set is fixed as 4,384 (motion, text) pairs. The list is in [`leaderboard/benchmark/humanml3d_test_pairs.json`](leaderboard/benchmark/humanml3d_test_pairs.json).
+
+| Item | Definition |
+|---|---|
+| Samples | All 4,384 IDs in HumanML3D `test.txt` (2,192 original motions and their 2,192 mirrored versions, whose IDs start with `M`). |
+| Motion | The whole clip of each ID. Start/end tags in the captions are not used to crop the motion. The motion representation and length handling are up to each method. |
+| Text | The first line of `texts/<id>.txt`, using the caption before the first `#`. |
 
 ### Metrics
 
@@ -55,7 +91,7 @@ In both protocols, only the paired sample counts as the correct match. The proto
 | Small-Batch | Random batches of 32 samples; metrics are averaged over the batches. |
 | All | The whole test set. |
 
-- **Small-Batch protocol** follows the evaluation of [Guo et al.](https://openaccess.thecvf.com/content/CVPR2022/html/Guo_Generating_Diverse_and_Natural_3D_Human_Motions_From_Text_CVPR_2022_paper.html). The test set is shuffled with a fixed seed, split into batches of 32, and retrieval is run inside each batch. Because there are only 31 distractors per query, scores are much higher than with the All protocol.
+- **Small-Batch protocol** follows the evaluation of [Guo et al.](https://openaccess.thecvf.com/content/CVPR2022/html/Guo_Generating_Diverse_and_Natural_3D_Human_Motions_From_Text_CVPR_2022_paper.html). The IDs are sorted, `np.arange(4384)` is shuffled with `np.random.RandomState(0)`, and the result is cut into 137 batches of 32. Retrieval is run inside each batch. The batches are listed in `small_batches` of the test-pair JSON. Because there are only 31 distractors per query, scores are much higher than with the All protocol.
 - **All protocol** retrieves from the whole test set. When several candidates have the same score as the correct match, their ranks are averaged.
 
 Results under different protocols are not comparable, so always check which protocol a paper reports.
