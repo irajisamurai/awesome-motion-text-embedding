@@ -41,6 +41,7 @@
 | 手法 | R@1 | R@2 | R@3 | R@5 | R@10 | MedR | R@1 | R@2 | R@3 | R@5 | R@10 | MedR |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Guo et al. | 1.85 | 3.49 | 4.84 | 7.19 | 12.57 | 81.00 | 2.40 | 3.70 | 5.41 | 8.01 | 12.91 | 81.00 |
+| TMR | 5.89 | 10.93 | 14.26 | 20.53 | 31.41 | 28.00 | 8.62 | 11.52 | 16.47 | 22.22 | 32.44 | 26.00 |
 | MoPatch | 7.28 | 13.75 | 18.45 | 25.66 | 38.12 | 19.00 | 11.75 | 14.80 | 21.12 | 28.22 | 38.71 | 19.00 |
 
 ### HumanML3D（Small-Batch protocol）
@@ -48,6 +49,7 @@
 | 手法 | R@1 | R@2 | R@3 | R@5 | R@10 | MedR | R@1 | R@2 | R@3 | R@5 | R@10 | MedR |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Guo et al. | 51.16 | 71.67 | 81.07 | 89.92 | 96.49 | 1.46 | 50.68 | 71.90 | 81.73 | 90.15 | 97.06 | 1.51 |
+| TMR | 67.38 | 81.07 | 86.18 | 91.40 | 95.39 | 1.03 | 68.04 | 81.87 | 86.75 | 91.17 | 95.42 | 1.03 |
 | MoPatch | 73.04 | 85.77 | 89.85 | 93.41 | 96.83 | 1.00 | 72.67 | 86.27 | 90.24 | 93.68 | 96.85 | 1.00 |
 
 ### 再現方法
@@ -57,6 +59,7 @@
 | 手法 | コマンド | 結果 |
 |---|---|---|
 | Guo et al. | `bash leaderboard/methods/guo/run.sh /path/to/HumanML3D` | [guo.json](leaderboard/results/guo.json) |
+| TMR | `bash leaderboard/methods/tmr/run.sh /path/to/HumanML3D /path/to/pose_data` | [tmr.json](leaderboard/results/tmr.json) |
 | MoPatch | `bash leaderboard/methods/mopatch/run.sh /path/to/HumanML3D` | [mopatch.json](leaderboard/results/mopatch.json) |
 
 ## 評価
