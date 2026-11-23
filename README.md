@@ -43,6 +43,7 @@ All results are measured by us on the fixed HumanML3D test set with the same eva
 | Guo et al. | 1.85 | 3.49 | 4.84 | 7.19 | 12.57 | 81.00 | 2.94 | 3.76 | 6.04 | 8.44 | 12.96 | 81.00 |
 | TMR | 5.89 | 10.93 | 14.26 | 20.53 | 31.41 | 28.00 | 9.15 | 11.66 | 16.79 | 22.63 | 32.46 | 26.00 |
 | MoPatch | 7.28 | 13.75 | 18.45 | 25.66 | 38.12 | 19.00 | 11.91 | 14.83 | 21.26 | 28.26 | 38.75 | 19.00 |
+| LaMP† | 4.01 | 7.94 | 10.72 | 15.99 | 26.25 | 33.00 | 6.30 | 7.94 | 13.55 | 19.21 | 28.12 | 31.50 |
 | SGAR | 8.71 | 15.21 | 19.37 | 27.62 | 40.51 | 17.00 | 13.30 | 16.72 | 23.68 | 30.52 | 41.20 | 16.00 |
 
 ### HumanML3D (Small-Batch protocol)
@@ -52,6 +53,7 @@ All results are measured by us on the fixed HumanML3D test set with the same eva
 | Guo et al. | 51.16 | 71.67 | 81.07 | 89.92 | 96.49 | 1.46 | 50.78 | 71.94 | 81.73 | 90.15 | 97.06 | 1.51 |
 | TMR | 67.38 | 81.07 | 86.18 | 91.40 | 95.39 | 1.03 | 68.11 | 81.87 | 86.75 | 91.17 | 95.42 | 1.03 |
 | MoPatch | 73.04 | 85.77 | 89.85 | 93.41 | 96.83 | 1.00 | 72.67 | 86.27 | 90.24 | 93.68 | 96.85 | 1.00 |
+| LaMP† | 66.22 | 81.27 | 86.06 | 90.17 | 92.77 | 1.02 | 66.38 | 80.93 | 86.25 | 90.08 | 92.81 | 1.03 |
 | SGAR | 75.41 | 88.07 | 92.34 | 95.78 | 97.79 | 1.00 | 75.73 | 88.50 | 92.45 | 95.53 | 98.11 | 1.00 |
 
 ### Reproduce
@@ -63,7 +65,10 @@ Each method has a script that clones the official code at a fixed commit, downlo
 | Guo et al. | `bash leaderboard/methods/guo/run.sh /path/to/HumanML3D` | [guo.json](leaderboard/results/guo.json) |
 | TMR | `bash leaderboard/methods/tmr/run.sh /path/to/HumanML3D /path/to/pose_data` | [tmr.json](leaderboard/results/tmr.json) |
 | MoPatch | `bash leaderboard/methods/mopatch/run.sh /path/to/HumanML3D` | [mopatch.json](leaderboard/results/mopatch.json) |
+| LaMP† | `bash leaderboard/methods/lamp/run.sh /path/to/HumanML3D` | [lamp.json](leaderboard/results/lamp.json) |
 | SGAR | `bash leaderboard/methods/sgar/run.sh /path/to/HumanML3D` | [sgar.json](leaderboard/results/sgar.json) |
+
+† The LaMP checkpoint does not include the normalization statistics used in training. We normalize the motions with the evaluator statistics of Guo et al., which the released LaMP evaluation code also uses and which reproduce the small-batch results of the paper (T2M R@1 66.22 vs 67.18). See [`leaderboard/methods/lamp/export_embeddings.py`](leaderboard/methods/lamp/export_embeddings.py).
 
 ## Evaluation
 
