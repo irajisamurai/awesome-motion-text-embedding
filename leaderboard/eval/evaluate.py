@@ -7,12 +7,17 @@ Usage:
 EMBEDDINGS.npz must contain:
     ids         [N]     sample IDs (any order; every ID in the pair list must be present once)
     text        [N, D]  text embeddings
-    motion      [N, D]  motion embeddings (row i is paired with text row i)
-    similarity  str     "cosine" (embeddings are L2-normalized here) or
-                        "neg_euclidean" (similarity = -Euclidean distance)
+    motion      [N, D]  motion embeddings (row i is paired with text row i),
+                or [N, Q, D] for "max_cosine"
+    similarity  str     "cosine" (embeddings are L2-normalized here),
+                        "neg_euclidean" (similarity = -Euclidean distance), or
+                        "max_cosine" (each motion has Q vectors; the similarity is the maximum
+                        cosine between the text and the Q vectors, as in BLIP-2 style models)
 
 Metrics follow TMR / SGAR (scripts/metrics.py): the paired sample is the only correct
 match, ties are broken by averaging the ranks, R@K is a percentage and MedR starts at 1.
+Pairs with identical captions share the text embedding of their first occurrence, so that
+identical captions always tie exactly, whatever the machine or BLAS library.
 """
 import argparse
 import json
@@ -35,6 +40,14 @@ def similarity_matrix(text, motion, kind):
     if kind == "neg_euclidean":
         d2 = (text ** 2).sum(1)[:, None] + (motion ** 2).sum(1)[None, :] - 2 * text @ motion.T
         return -np.sqrt(np.maximum(d2, 0.0))
+    if kind == "max_cosine":
+        assert motion.ndim == 3, "max_cosine needs motion embeddings of shape [N, Q, D]"
+        text = text / np.linalg.norm(text, axis=1, keepdims=True)
+        motion = motion / np.linalg.norm(motion, axis=2, keepdims=True)
+        sims = np.empty((len(text), len(motion)))
+        for s in range(0, len(text), 256):  # chunks keep the [n, N, Q] block small
+            sims[s:s + 256] = np.einsum("id,jqd->ijq", text[s:s + 256], motion).max(-1)
+        return sims
     raise ValueError(f"unknown similarity: {kind}")
 
 
@@ -83,7 +96,19 @@ def main():
     assert not missing, f"{len(missing)} benchmark IDs are missing, e.g. {sorted(missing)[:5]}"
     pos = {k: i for i, k in enumerate(ids)}
     sel = np.array([pos[k] for k in order])
-    sims = similarity_matrix(emb["text"][sel], emb["motion"][sel], kind)
+    # Pairs with identical captions share one text embedding (the first occurrence), and the
+    # similarities are computed once per unique caption. Identical captions then give exactly
+    # equal scores, so ties are found the same way on every machine and BLAS library.
+    texts = [p["text"] for p in bench["pairs"]]
+    unique_row = {}  # caption -> row in the unique-caption matrix
+    first_index = []  # pair index of the first occurrence of each unique caption
+    for i, t in enumerate(texts):
+        if t not in unique_row:
+            unique_row[t] = len(first_index)
+            first_index.append(i)
+    inverse = np.array([unique_row[t] for t in texts])
+    text_unique = emb["text"][sel][first_index]
+    sims = similarity_matrix(text_unique, emb["motion"][sel], kind)[inverse]
 
     index = {k: i for i, k in enumerate(order)}
     results = {"all": both_directions(sims)}
